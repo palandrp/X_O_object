@@ -105,17 +105,19 @@ class AI extends Gamer {
     }
     private boolean checkIsAssInTheFire(Field field, Gamer enemy, int x, int y){
         boolean flag = false;
-        int count;
+        int count, size = field.getSize();
+        char dot = enemy.getDot();
+        char dotEmpty = field.getDot();
         // Диагонали проверяем только если оказались на диагонали
         if (x == y) {
             count = 0;
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(i,i) == enemy.getDot()) count++;
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(i,i) == dot) count++;
             }
-            if (count == field.getSize() - 1) {
-                for (int i = 0; i < field.getSize(); i++) {
-                    if (field.getMapPoint(i,i) != enemy.getDot()
-                            && field.getMapPoint(i,i) == field.getDot()) {
+            if (count == size - 1) {
+                for (int i = 0; i < size; i++) {
+                    if (field.getMapPoint(i,i) != dot
+                            && field.getMapPoint(i,i) == dotEmpty) {
                         x = i;
                         y = i;
                         field.setMapPoint(y,x,this.type);
@@ -124,22 +126,22 @@ class AI extends Gamer {
                 }
             }
         }
-        if (x + y == field.getSize() - 1) {
+        if (x + y == size - 1) {
             count = 0;
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(i,(field.getSize() - 1) - i)
-                        == enemy.getDot()) {
-                    if (field.getMapPoint(i,field.getSize() - 1)
-                            == enemy.getDot()) count++;
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(i,(size - 1) - i)
+                        == dot) {
+                    if (field.getMapPoint(i,size - 1)
+                            == dot) count++;
                 }
             }
-            if (count == field.getSize() - 1) {
-                for (int i = 0; i < field.getSize(); i++) {
-                    if (field.getMapPoint(i,(field.getSize() - 1) - i)
-                            != enemy.getDot()
-                            && field.getMapPoint(i,(field.getSize() - 1) - i)
-                                == field.getDot()) {
-                        x = (field.getSize() - 1) - i;
+            if (count == size - 1) {
+                for (int i = 0; i < size; i++) {
+                    if (field.getMapPoint(i,(size - 1) - i)
+                            != dot
+                            && field.getMapPoint(i,(size - 1) - i)
+                                == dotEmpty) {
+                        x = (size - 1) - i;
                         y = i;
                         field.setMapPoint(y,x,this.type);
                         return true;
@@ -149,15 +151,15 @@ class AI extends Gamer {
         }
         // Проверяем столбец
         count = 0;
-        for (int i = 0; i < field.getSize(); i++) {
-            if (field.getMapPoint(y,i) == enemy.getDot()) {
-                if (field.getMapPoint(y,i) == enemy.getDot()) count++;
+        for (int i = 0; i < size; i++) {
+            if (field.getMapPoint(y,i) == dot) {
+                if (field.getMapPoint(y,i) == dot) count++;
             }
         }
-        if (count == field.getSize() - 1) {
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(y,i) != enemy.getDot()
-                        && field.getMapPoint(y,i) == field.getDot()) {
+        if (count == size - 1) {
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(y,i) != dot
+                        && field.getMapPoint(y,i) == dotEmpty) {
                     x = i;
                     field.setMapPoint(y,x,this.type);
                     return true;
@@ -166,15 +168,15 @@ class AI extends Gamer {
         }
         // Проверяем строку
         count = 0;
-        for (int i = 0; i < field.getSize(); i++) {
-            if (field.getMapPoint(i,x) == enemy.getDot()) {
-                if (field.getMapPoint(i,x) == enemy.getDot()) count++;
+        for (int i = 0; i < size; i++) {
+            if (field.getMapPoint(i,x) == dot) {
+                if (field.getMapPoint(i,x) == dot) count++;
             }
         }
-        if (count == field.getSize() - 1) {
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(i,x) != enemy.getDot()
-                        && field.getMapPoint(i,x) == field.getDot()) {
+        if (count == size - 1) {
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(i,x) != dot
+                        && field.getMapPoint(i,x) == dotEmpty) {
                     y = i;
                     field.setMapPoint(y,x,this.type);
                     return true;
@@ -254,12 +256,14 @@ class GameLogic {
     private boolean checkWin(Field field, Gamer gamer) {
         int x = field.getLastTurn().x;
         int y = field.getLastTurn().y;
+        char dot = gamer.getDot();
+        int size = field.getSize();
         // Метод поддерживает любое кол-во фишек и полей
         boolean flag = false;
         // Диагонали проверяем только если оказались на диагонали
         if (x == y) {
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(i,i) == gamer.getDot()) flag = true;
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(i,i) == dot) flag = true;
                 else {
                     flag = false;
                     break;
@@ -267,10 +271,10 @@ class GameLogic {
             }
             if (flag) return true;
         }
-        if (x + y == field.getSize() - 1) {
-            for (int i = 0; i < field.getSize(); i++) {
-                if (field.getMapPoint(i,(field.getSize() - 1) - i)
-                        == gamer.getDot()) flag = true;
+        if (x + y == size - 1) {
+            for (int i = 0; i < size; i++) {
+                if (field.getMapPoint(i,(size - 1) - i)
+                        == dot) flag = true;
                 else {
                     flag = false;
                     break;
@@ -279,8 +283,8 @@ class GameLogic {
             if (flag) return true;
         }
         // Проверяем столбец
-        for (int i = 0; i < field.getSize(); i++) {
-            if (field.getMapPoint(y,i) == gamer.getDot())
+        for (int i = 0; i < size; i++) {
+            if (field.getMapPoint(y,i) == dot)
                 flag = true;
             else {
                 flag = false;
@@ -289,8 +293,8 @@ class GameLogic {
         }
         if (flag) return true;
         // Проверяем строку
-        for (int i = 0; i < field.getSize(); i++) {
-            if (field.getMapPoint(i,x) == gamer.getDot()) flag = true;
+        for (int i = 0; i < size; i++) {
+            if (field.getMapPoint(i,x) == dot) flag = true;
             else {
                 flag = false;
                 break;
