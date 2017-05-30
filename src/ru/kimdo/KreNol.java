@@ -3,6 +3,10 @@ package ru.kimdo;
 /**
  * @author Pavel Petrikovskiy
  * @version 25.05.17.
+ * (на заметку: добавить метод canIWin для AI
+ * по типу проверки противника на предвыигрыш
+ * только по своим точкам, тогда AI начнет
+ * иногда побеждать в сложных ситуациях)
  */
 
 import java.util.Random;
@@ -92,8 +96,8 @@ class AI extends Gamer {
     }
     @Override
     void turn(Field field, Gamer enemy){
-        int x = field.getLastTurn().x;
-        int y = field.getLastTurn().y;
+        int x = field.getLastTurn().y;
+        int y = field.getLastTurn().x;
         boolean isAssInTheFire = checkIsAssInTheFire(field, enemy, x, y);
         if (!isAssInTheFire) {
             do {
@@ -222,6 +226,7 @@ class Painter {
             }
             System.out.println();
         }
+        System.out.println("===================");
     }
 }
 
@@ -233,6 +238,7 @@ class GameLogic {
         Gamer human = new Human('X');
         while (true) {
             human.turn(field,ai);
+            painter.paint(field);
             if (checkWin(field,human)) {
                 System.out.println("You win!");
                 break;
@@ -254,8 +260,8 @@ class GameLogic {
         System.out.println("GAME OVER!");
     }
     private boolean checkWin(Field field, Gamer gamer) {
-        int x = field.getLastTurn().x;
-        int y = field.getLastTurn().y;
+        int x = field.getLastTurn().y;
+        int y = field.getLastTurn().x;
         char dot = gamer.getDot();
         int size = field.getSize();
         // Метод поддерживает любое кол-во фишек и полей
