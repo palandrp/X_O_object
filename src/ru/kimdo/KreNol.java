@@ -15,6 +15,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -219,36 +221,61 @@ class Human extends Gamer {
     }
 }
 
-class Painter {
-    Painter(Field field){
-        for (int i = 0; i < field.getSize(); i++) {
-            for (int j = 0; j < field.getSize(); j++) {
-                System.out.print(field.getMapPoint(i,j));
-            }
-            System.out.println();
-        }
+class Painter extends JPanel {
+    private int FIELD_SIZE;
+    private int CELL_SIZE;
+    private char HUMAN_DOT;
+    private char AI_DOT;
+    private Field field;
+
+    Painter(Field field, Gamer human, Gamer ai){
+        this.FIELD_SIZE = field.getSize();
+        this.CELL_SIZE = GameWindow.WINDOW_SIZE / FIELD_SIZE;
+        this.HUMAN_DOT = human.getDot();
+        this.AI_DOT = ai.getDot();
+        this.field = field;
     }
-    void paint(Field field){
-        for (int i = 0; i < field.getSize(); i++) {
-            for (int j = 0; j < field.getSize(); j++) {
-                System.out.print(field.getMapPoint(i, j));
-            }
-            System.out.println();
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.setColor(Color.lightGray);
+        for (int i = 1; i < FIELD_SIZE; i++) {
+            g.drawLine(0, i*CELL_SIZE, FIELD_SIZE*CELL_SIZE, i*CELL_SIZE);
+            g.drawLine(i*CELL_SIZE, 0, i*CELL_SIZE, FIELD_SIZE*CELL_SIZE);
         }
-        System.out.println("===================");
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setStroke(new BasicStroke(5));
+        for (int y = 0; y < FIELD_SIZE; y++) {
+            for (int x = 0; x < FIELD_SIZE; x++) {
+                if (field.getMapPoint(x,y) == HUMAN_DOT) {
+                    g.setColor(Color.blue);
+                    g2.draw(new Line2D.Float(x*CELL_SIZE+CELL_SIZE/4,
+                            y*CELL_SIZE+CELL_SIZE/4, (x+1)*CELL_SIZE-CELL_SIZE/4,
+                            (y+1)*CELL_SIZE-CELL_SIZE/4));
+                    g2.draw(new Line2D.Float(x*CELL_SIZE+CELL_SIZE/4,
+                            (y+1)*CELL_SIZE-CELL_SIZE/4, (x+1)*CELL_SIZE-CELL_SIZE/4,
+                            y*CELL_SIZE+CELL_SIZE/4));
+                }
+                if (field.getMapPoint(x,y) == AI_DOT) {
+                    g.setColor(Color.red);
+                    g2.draw(new Ellipse2D.Float(x*CELL_SIZE+CELL_SIZE/4,
+                            y*CELL_SIZE+CELL_SIZE/4, CELL_SIZE/2, CELL_SIZE/2));
+                }
+            }
+        }
     }
 }
 
 class GameLogic {
     void go(int SIZE){
         Field field = new Field(SIZE);
-        Painter painter = new Painter(field);
         Gamer ai = new AI('0');
         Gamer human = new Human('X');
-        GameWindow gameWindow = new GameWindow();
+        Painter painter = new Painter(field,human,ai);
+        GameWindow gameWindow = new GameWindow(field,painter);
         while (true) {
             human.turn(field,ai);
-            painter.paint(field);
+            painter.repaint();
             if (checkWin(field,human)) {
                 System.out.println("You win!");
                 break;
@@ -258,7 +285,7 @@ class GameLogic {
                 break;
             }
             ai.turn(field,human);
-            painter.paint(field);
+            painter.repaint();
             if (checkWin(field,ai)) {
                 System.out.println("You lost!");
                 break;
@@ -324,37 +351,32 @@ class GameLogic {
 class GameWindow extends JFrame {
     private final String TITLE_OF_PROGRAM = "Крестики-нолики";
     private final int START_POSITION = 300;
-    private final int WINDOW_SIZE = 300;
+    static final int WINDOW_SIZE = 300;
     private final int WINDOW_DX = 9;
     private final int WINDOW_DY = 57;
-    // private final int CELL_SIZE = WINDOW_SIZE / FIELD_SIZE;
     private final String BTN_START = "Заново";
     private final String BTN_EXIT = "Завершить";
-    private Canvas canvas;
-    private final int FIELD_SIZE;
 
-    GameWindow(final Field field, Painter painter, int SIZE){
-        this.FIELD_SIZE = SIZE;
+    GameWindow(final Field field, final Painter painter){
         setTitle(TITLE_OF_PROGRAM);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(START_POSITION, START_POSITION, WINDOW_SIZE + WINDOW_DX,
                 WINDOW_SIZE + WINDOW_DY);
         setResizable(false);
-        this.canvas = new Canvas();
-        canvas.setBackground(Color.WHITE);
-        canvas.addMouseListener(new MouseAdapter() {
+        painter.setBackground(Color.WHITE);
+        painter.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
                 super.mouseReleased(e);
-                System.out.printf("%d - %d",e.getX(),e.getY());
+                System.out.printf("%d - %d\n",e.getX(),e.getY());
             }
         });
         JButton start = new JButton(BTN_START);
         start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                field.init(FIELD_SIZE);
-                canvas.repaint();
+                field.init(field.getSize());
+                painter.repaint();
             }
         });
         JButton exit = new JButton(BTN_EXIT);
@@ -370,15 +392,7 @@ class GameWindow extends JFrame {
         buttonPanel.add(exit);
         setLayout(new BorderLayout());
         add(buttonPanel,BorderLayout.SOUTH);
-        add(canvas,BorderLayout.CENTER);
+        add(painter,BorderLayout.CENTER);
         setVisible(true);
-    }
-
-    class Canvas extends JPanel {
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-            painter.paint(g);
-        }
     }
 }
