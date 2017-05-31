@@ -15,15 +15,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.util.Random;
 import java.util.Scanner;
 
 class KreNol {
-    final static int SIZE = 5;
-
+    final static int SIZE = 3;
     public static void main(String[] args){
-
-        new GameLogic().go(SIZE);
+        new GameWindow(SIZE);
     }
 }
 
@@ -33,15 +33,10 @@ abstract class Gamer {
     Gamer(char type){
         this.type = type;
     }
-    abstract void turn(Field field, Gamer gamer);
+    abstract void turn(int x, int y, Field field, Gamer gamer);
     char getDot() {
         return this.type;
     }
-}
-
-class LastTurn {
-    int x;
-    int y;
 }
 
 class Field {
@@ -51,6 +46,9 @@ class Field {
     private LastTurn lastTurn;
 
     Field(int SIZE){
+        init(SIZE);
+    }
+    void init(int SIZE){
         this.SIZE = SIZE;
         this.map = new char[SIZE][SIZE];
         for (int i = 0; i < SIZE; i++)
@@ -91,6 +89,11 @@ class Field {
         }
         return true;
     }
+
+    class LastTurn {
+        int x;
+        int y;
+    }
 }
 
 class AI extends Gamer {
@@ -101,9 +104,7 @@ class AI extends Gamer {
         this.rand = new Random();
     }
     @Override
-    void turn(Field field, Gamer enemy){
-        int x = field.getLastTurn().y;
-        int y = field.getLastTurn().x;
+    void turn(int x, int y, Field field, Gamer enemy){
         boolean isAssInTheFire = checkIsAssInTheFire(field, enemy, x, y);
         if (!isAssInTheFire) {
             do {
@@ -198,75 +199,20 @@ class AI extends Gamer {
 }
 
 class Human extends Gamer {
-    private Scanner sc;
-    private int x,y;
-
     Human(char type){
         super(type);
-        this.sc = new Scanner(System.in);
     }
     @Override
-    void turn(Field field, Gamer enemy){
-        do {
-            System.out.println("Enter X and Y (1 - " + field.getSize() + "):");
-            x = sc.nextInt() - 1;
-            y = sc.nextInt() - 1;
-        } while (!field.isCellValid(x, y));
+    void turn(int x, int y, Field field, Gamer enemy){
         field.setMapPoint(y,x,this.type);
     }
 }
 
-class Painter {
-    Painter(Field field){
-        for (int i = 0; i < field.getSize(); i++) {
-            for (int j = 0; j < field.getSize(); j++) {
-                System.out.print(field.getMapPoint(i,j));
-            }
-            System.out.println();
-        }
-    }
-    void paint(Field field){
-        for (int i = 0; i < field.getSize(); i++) {
-            for (int j = 0; j < field.getSize(); j++) {
-                System.out.print(field.getMapPoint(i, j));
-            }
-            System.out.println();
-        }
-        System.out.println("===================");
-    }
-}
-
 class GameLogic {
-    void go(int SIZE){
-        Field field = new Field(SIZE);
-        Painter painter = new Painter(field);
-        Gamer ai = new AI('0');
-        Gamer human = new Human('X');
-        GameWindow gameWindow = new GameWindow();
-        while (true) {
-            human.turn(field,ai);
-            painter.paint(field);
-            if (checkWin(field,human)) {
-                System.out.println("You win!");
-                break;
-            }
-            if (field.isMapFull()) {
-                System.out.println("Sorry, DRAW!");
-                break;
-            }
-            ai.turn(field,human);
-            painter.paint(field);
-            if (checkWin(field,ai)) {
-                System.out.println("You lost!");
-                break;
-            }
-            if (field.isMapFull()) {
-                System.out.println("Sorry, DRAW!");
-            }
-        }
-        System.out.println("GAME OVER!");
-    }
-    private boolean checkWin(Field field, Gamer gamer) {
+    private final String youWinMsg = "Вы победили!";
+    private final String youLostMsg = "Вы проиграли!";
+
+    boolean checkWin(Field field, Gamer gamer) {
         int x = field.getLastTurn().y;
         int y = field.getLastTurn().x;
         char dot = gamer.getDot();
@@ -316,40 +262,72 @@ class GameLogic {
         if (flag) return true;
         return false;
     }
+    String getYouWinMsg(){
+        return youWinMsg;
+    }
+
+    String getYouLostMsg() {
+        return youLostMsg;
+    }
 }
 
 class GameWindow extends JFrame {
-    private final String TITLE_OF_PROGRAM = "Крестики-нолики";
-    private final int START_POSITION = 300;
-    private final int WINDOW_SIZE = 300;
-    private final int WINDOW_DX = 9;
-    private final int WINDOW_DY = 57;
-    private final int FIELD_SIZE = 3;
-    private final int CELL_SIZE = WINDOW_SIZE / FIELD_SIZE;
-    private final String BTN_START = "Заново";
-    private final String BTN_EXIT = "Завершить";
-    private Canvas canvas;
+    private int CELL_SIZE;
+    private int SIZE;
+    private Field field;
+    private Gamer ai = new AI('0');
+    private Gamer human = new Human('X');
+    private GameLogic gameLogic = new GameLogic();
+    private Painter painter = new Painter();
 
-    GameWindow(){
+    GameWindow(final int SIZE){
+        final String TITLE_OF_PROGRAM = "Крестики-нолики";
+        final int START_POSITION = 300;
+        final int WINDOW_SIZE = 300;
+        final int WINDOW_DX = 9;
+        final int WINDOW_DY = 57;
+        final String BTN_START = "Заново";
+        final String BTN_EXIT = "Завершить";
+        this.field = new Field(SIZE);
+        this.SIZE = SIZE;
+        this.CELL_SIZE = WINDOW_SIZE/SIZE;
+
         setTitle(TITLE_OF_PROGRAM);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(START_POSITION, START_POSITION, WINDOW_SIZE + WINDOW_DX,
                 WINDOW_SIZE + WINDOW_DY);
         setResizable(false);
-        this.canvas = new Canvas();
-        canvas.setBackground(Color.WHITE);
-        canvas.addMouseListener(new MouseAdapter() {
+        painter.setBackground(Color.WHITE);
+        painter.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
                 super.mouseReleased(e);
-                System.out.printf("%d - %d",e.getX(),e.getY());
+                if (field.isCellValid(e.getX()/CELL_SIZE,e.getY()/CELL_SIZE)) {
+                    human.turn(e.getY()/CELL_SIZE,e.getX()/CELL_SIZE, field, ai);
+                    painter.repaint();
+                    if (gameLogic.checkWin(field, human)) {
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                gameLogic.getYouWinMsg());
+                        field.init(SIZE);
+                        painter.repaint();
+                    }
+                    ai.turn(field.getLastTurn().x, field.getLastTurn().y, field, human);
+                    painter.repaint();
+                    if (gameLogic.checkWin(field, ai)) {
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                gameLogic.getYouLostMsg());
+                        field.init(SIZE);
+                        painter.repaint();
+                    }
+                }
             }
         });
         JButton start = new JButton(BTN_START);
         start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("GAME START");
+                field.init(SIZE);
+                painter.repaint();
             }
         });
         JButton exit = new JButton(BTN_EXIT);
@@ -365,7 +343,50 @@ class GameWindow extends JFrame {
         buttonPanel.add(exit);
         setLayout(new BorderLayout());
         add(buttonPanel,BorderLayout.SOUTH);
-        add(canvas,BorderLayout.CENTER);
+        add(painter,BorderLayout.CENTER);
         setVisible(true);
+    }
+
+    class Painter extends JPanel {
+        @Override
+        public void paint(Graphics g) {
+            super.paint(g);
+            g.setColor(Color.lightGray);
+            for (int i = 1; i < SIZE; i++) {
+                g.drawLine(0, i*CELL_SIZE,
+                        SIZE*CELL_SIZE,
+                        i*CELL_SIZE);
+                g.drawLine(i*CELL_SIZE, 0,
+                        i*CELL_SIZE,
+                        SIZE*CELL_SIZE);
+            }
+            Graphics2D g2 = (Graphics2D) g; // use Graphics2D
+            g2.setStroke(new BasicStroke(5));
+            for (int y = 0; y < SIZE; y++) {
+                for (int x = 0; x < SIZE; x++) {
+                    if (field.getMapPoint(x,y) == human.getDot()) {
+                        g.setColor(Color.blue);
+                        g2.draw(new Line2D.Float(
+                                x*CELL_SIZE+CELL_SIZE/4,
+                                y*CELL_SIZE+CELL_SIZE/4,
+                                (x+1)*CELL_SIZE-CELL_SIZE/4,
+                                (y+1)*CELL_SIZE-CELL_SIZE/4));
+                        g2.draw(new Line2D.Float(
+                                x*CELL_SIZE+CELL_SIZE/4,
+                                (y+1)*CELL_SIZE-CELL_SIZE/4,
+                                (x+1)*CELL_SIZE-CELL_SIZE/4,
+                                y*CELL_SIZE+CELL_SIZE/4));
+                    }
+                    if (field.getMapPoint(x,y) == ai.getDot()) {
+                        g.setColor(Color.red);
+                        g2.draw(new Ellipse2D.Float(
+                                x*CELL_SIZE+CELL_SIZE/4,
+                                y*CELL_SIZE+CELL_SIZE/4,
+                                CELL_SIZE/2,
+                                CELL_SIZE/2));
+                    }
+                }
+            }
+        }
     }
 }
