@@ -36,6 +36,7 @@ abstract class Gamer {
         this.type = type;
     }
     abstract void turn(Field field, Gamer gamer);
+    abstract void graphicTurn(int x, int y, Field field);
     char getDot() {
         return this.type;
     }
@@ -104,6 +105,10 @@ class AI extends Gamer {
     AI(char type){
         super(type);
         this.rand = new Random();
+    }
+    @Override
+    void graphicTurn(int x, int y, Field field){
+        System.out.println("Not used");
     }
     @Override
     void turn(Field field, Gamer enemy){
@@ -203,21 +208,18 @@ class AI extends Gamer {
 }
 
 class Human extends Gamer {
-    private Scanner sc;
     private int x,y;
 
     Human(char type){
         super(type);
-        this.sc = new Scanner(System.in);
+    }
+    @Override
+    void graphicTurn(int x, int y, Field field){
+        field.setMapPoint(y,x,this.type);
     }
     @Override
     void turn(Field field, Gamer enemy){
-        do {
-            System.out.println("Enter X and Y (1 - " + field.getSize() + "):");
-            x = sc.nextInt() - 1;
-            y = sc.nextInt() - 1;
-        } while (!field.isCellValid(x, y));
-        field.setMapPoint(y,x,this.type);
+        System.out.println("Deprecated");
     }
 }
 
@@ -272,9 +274,9 @@ class GameLogic {
         Gamer ai = new AI('0');
         Gamer human = new Human('X');
         Painter painter = new Painter(field,human,ai);
-        GameWindow gameWindow = new GameWindow(field,painter);
+        GameWindow gameWindow = new GameWindow(field,painter,human);
         while (true) {
-            human.turn(field,ai);
+            gameWindow.waitTurn(field,painter,human);
             painter.repaint();
             if (checkWin(field,human)) {
                 System.out.println("You win!");
@@ -356,21 +358,18 @@ class GameWindow extends JFrame {
     private final int WINDOW_DY = 57;
     private final String BTN_START = "Заново";
     private final String BTN_EXIT = "Завершить";
+    private int CELL_SIZE;
+    private int X,Y;
 
-    GameWindow(final Field field, final Painter painter){
+    GameWindow(final Field field,final Painter painter,final Gamer human){
+        this.CELL_SIZE = WINDOW_SIZE / field.getSize();
         setTitle(TITLE_OF_PROGRAM);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(START_POSITION, START_POSITION, WINDOW_SIZE + WINDOW_DX,
                 WINDOW_SIZE + WINDOW_DY);
         setResizable(false);
         painter.setBackground(Color.WHITE);
-        painter.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                super.mouseReleased(e);
-                System.out.printf("%d - %d\n",e.getX(),e.getY());
-            }
-        });
+        waitTurn(field,painter,human);
         JButton start = new JButton(BTN_START);
         start.addActionListener(new ActionListener() {
             @Override
@@ -394,5 +393,18 @@ class GameWindow extends JFrame {
         add(buttonPanel,BorderLayout.SOUTH);
         add(painter,BorderLayout.CENTER);
         setVisible(true);
+    }
+    void waitTurn(final Field field,Painter painter,final Gamer human){
+        painter.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                do {
+                    X = e.getX() / CELL_SIZE;
+                    Y = e.getY() / CELL_SIZE;
+                } while (!field.isCellValid(X, Y));
+                human.graphicTurn(X,Y,field);
+            }
+        });
     }
 }
