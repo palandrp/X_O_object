@@ -9,6 +9,12 @@ package ru.kimdo;
  * иногда побеждать в сложных ситуациях)
  */
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -236,6 +242,7 @@ class GameLogic {
         Painter painter = new Painter(field);
         Gamer ai = new AI('0');
         Gamer human = new Human('X');
+        GameWindow gameWindow = new GameWindow();
         while (true) {
             human.turn(field,ai);
             painter.paint(field);
@@ -308,5 +315,57 @@ class GameLogic {
         }
         if (flag) return true;
         return false;
+    }
+}
+
+class GameWindow extends JFrame {
+    private final String TITLE_OF_PROGRAM = "Крестики-нолики";
+    private final int START_POSITION = 300;
+    private final int WINDOW_SIZE = 300;
+    private final int WINDOW_DX = 9;
+    private final int WINDOW_DY = 57;
+    private final int FIELD_SIZE = 3;
+    private final int CELL_SIZE = WINDOW_SIZE / FIELD_SIZE;
+    private final String BTN_START = "Заново";
+    private final String BTN_EXIT = "Завершить";
+    private Canvas canvas;
+
+    GameWindow(){
+        setTitle(TITLE_OF_PROGRAM);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setBounds(START_POSITION, START_POSITION, WINDOW_SIZE + WINDOW_DX,
+                WINDOW_SIZE + WINDOW_DY);
+        setResizable(false);
+        this.canvas = new Canvas();
+        canvas.setBackground(Color.WHITE);
+        canvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                System.out.printf("%d - %d",e.getX(),e.getY());
+            }
+        });
+        JButton start = new JButton(BTN_START);
+        start.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("GAME START");
+            }
+        });
+        JButton exit = new JButton(BTN_EXIT);
+        exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridBagLayout());
+        buttonPanel.add(start);
+        buttonPanel.add(exit);
+        setLayout(new BorderLayout());
+        add(buttonPanel,BorderLayout.SOUTH);
+        add(canvas,BorderLayout.CENTER);
+        setVisible(true);
     }
 }
