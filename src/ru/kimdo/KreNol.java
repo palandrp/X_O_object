@@ -19,7 +19,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 class KreNol {
-    final static int SIZE = 5;
+    private final static int SIZE = 5;
 
     public static void main(String[] args){
 
@@ -39,11 +39,6 @@ abstract class Gamer {
     }
 }
 
-class LastTurn {
-    int x;
-    int y;
-}
-
 class Field {
     private int SIZE;
     private char DOT_EMPTY = '.';
@@ -51,6 +46,9 @@ class Field {
     private LastTurn lastTurn;
 
     Field(int SIZE){
+        init(SIZE);
+    }
+    void init(int SIZE){
         this.SIZE = SIZE;
         this.map = new char[SIZE][SIZE];
         for (int i = 0; i < SIZE; i++)
@@ -90,6 +88,11 @@ class Field {
             }
         }
         return true;
+    }
+
+    class LastTurn {
+        int x;
+        int y;
     }
 }
 
@@ -324,13 +327,14 @@ class GameWindow extends JFrame {
     private final int WINDOW_SIZE = 300;
     private final int WINDOW_DX = 9;
     private final int WINDOW_DY = 57;
-    private final int FIELD_SIZE = 3;
-    private final int CELL_SIZE = WINDOW_SIZE / FIELD_SIZE;
+    // private final int CELL_SIZE = WINDOW_SIZE / FIELD_SIZE;
     private final String BTN_START = "Заново";
     private final String BTN_EXIT = "Завершить";
     private Canvas canvas;
+    private final int FIELD_SIZE;
 
-    GameWindow(){
+    GameWindow(final Field field, Painter painter, int SIZE){
+        this.FIELD_SIZE = SIZE;
         setTitle(TITLE_OF_PROGRAM);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(START_POSITION, START_POSITION, WINDOW_SIZE + WINDOW_DX,
@@ -349,7 +353,8 @@ class GameWindow extends JFrame {
         start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("GAME START");
+                field.init(FIELD_SIZE);
+                canvas.repaint();
             }
         });
         JButton exit = new JButton(BTN_EXIT);
@@ -367,5 +372,13 @@ class GameWindow extends JFrame {
         add(buttonPanel,BorderLayout.SOUTH);
         add(canvas,BorderLayout.CENTER);
         setVisible(true);
+    }
+
+    class Canvas extends JPanel {
+        @Override
+        public void paint(Graphics g) {
+            super.paint(g);
+            painter.paint(g);
+        }
     }
 }
