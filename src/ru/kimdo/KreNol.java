@@ -76,7 +76,7 @@ class Field {
     char getDot(){
         return DOT_EMPTY;
     }
-    boolean isCellValid(int x, int y) {
+    boolean isCellValid(int y, int x) {
         if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) return false;
         if (map[y][x] == DOT_EMPTY) return true;
         return false;
@@ -209,9 +209,6 @@ class Human extends Gamer {
 }
 
 class GameLogic {
-    private final String youWinMsg = "Вы победили!";
-    private final String youLostMsg = "Вы проиграли!";
-
     boolean checkWin(Field field, Gamer gamer) {
         int x = field.getLastTurn().y;
         int y = field.getLastTurn().x;
@@ -263,12 +260,15 @@ class GameLogic {
         return false;
     }
     String getYouWinMsg(){
-        return youWinMsg;
+        return "Вы победили!";
     }
 
     String getYouLostMsg() {
-        return youLostMsg;
+        return "Вы проиграли!";
     }
+
+    String getDrawMsg() {
+        return "Ничья!"; }
 }
 
 class GameWindow extends JFrame {
@@ -305,14 +305,26 @@ class GameWindow extends JFrame {
                 if (field.isCellValid(e.getX()/CELL_SIZE,e.getY()/CELL_SIZE)) {
                     human.turn(e.getY()/CELL_SIZE,e.getX()/CELL_SIZE, field, ai);
                     painter.repaint();
+                    if (field.isMapFull()){
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                gameLogic.getDrawMsg());
+                        field.init(SIZE);
+                        painter.repaint();
+                    }
                     if (gameLogic.checkWin(field, human)) {
                         JOptionPane.showMessageDialog(GameWindow.this,
                                 gameLogic.getYouWinMsg());
                         field.init(SIZE);
                         painter.repaint();
                     }
-                    ai.turn(field.getLastTurn().x, field.getLastTurn().y, field, human);
+                    ai.turn(field.getLastTurn().y, field.getLastTurn().x, field, human);
                     painter.repaint();
+                    if (field.isMapFull()){
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                gameLogic.getDrawMsg());
+                        field.init(SIZE);
+                        painter.repaint();
+                    }
                     if (gameLogic.checkWin(field, ai)) {
                         JOptionPane.showMessageDialog(GameWindow.this,
                                 gameLogic.getYouLostMsg());
